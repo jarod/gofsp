@@ -62,7 +62,8 @@ func (fs *FspServer) read(conn *net.TCPConn) {
 		if (err == os.EOF) {
 			return
 		} else if (err != nil) {
-			log.Fatalln(err.String())
+			log.Println(err.String())
+			return
 		}
 
 		w := bufio.NewWriter(conn)
