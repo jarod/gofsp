@@ -1,12 +1,11 @@
 package main
 
 import (
-  "net"
-  "bufio"
-  "log"
-	"os"
+	"bufio"
 	"io"
 	"io/ioutil"
+	"log"
+	"net"
 )
 
 const (
@@ -14,41 +13,41 @@ const (
 )
 
 type FspServer struct {
-  listener *net.TCPListener 
+	listener      *net.TCPListener
 	policyContent string
 }
 
 func NewFspServer() *FspServer {
 	fsp := &FspServer{}
 	fsp.policyContent = DefaultPolicy
-  return fsp
+	return fsp
 }
 
 func (fs *FspServer) Startup() {
-  addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:843")
-  if (err != nil) {
-    log.Fatalln(err.String())
-  }
-  fs.listener, err = net.ListenTCP("tcp", addr)
-  if err != nil {
-    log.Fatalln(err.String())
-  }
+	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:843")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fs.listener, err = net.ListenTCP("tcp", addr)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	log.Printf("Listening on %s", addr.String())
 
-  for {
-    conn, err := fs.listener.AcceptTCP()
-		if (err != nil) {
-			log.Fatalln(err.String())
+	for {
+		conn, err := fs.listener.AcceptTCP()
+		if err != nil {
+			log.Fatalln(err)
 		}
-    go fs.read(conn)
-  }
-  fs.listener.Close()
+		go fs.read(conn)
+	}
+	fs.listener.Close()
 }
 
 func (fs *FspServer) LoadPolicy(src io.Reader) {
 	data, err := ioutil.ReadAll(bufio.NewReader(src))
 	if err != nil {
-		log.Fatalln(err.String())
+		log.Fatalln(err)
 	}
 	fs.policyContent = string(data) + "\x00"
 }
@@ -58,11 +57,11 @@ func (fs *FspServer) read(conn *net.TCPConn) {
 
 	r := bufio.NewReader(conn)
 	for {
-		_,  err := r.ReadString('\x00')
-		if (err == os.EOF) {
+		_, err := r.ReadString('\x00')
+		if err == io.EOF {
 			return
-		} else if (err != nil) {
-			log.Fatalln(err.String())
+		} else if err != nil {
+			log.Fatalln(err)
 		}
 
 		w := bufio.NewWriter(conn)

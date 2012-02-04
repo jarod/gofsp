@@ -28,7 +28,7 @@ func main() {
 	if len(*filename) > 0 {
 		file, err := os.Open(*filename)
 		if err != nil {
-			log.Fatalln(err.String())
+			log.Fatalln(err)
 		}
 		fsp.LoadPolicy(file)
 	}
