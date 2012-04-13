@@ -58,10 +58,9 @@ func (fs *FspServer) read(conn *net.TCPConn) {
 	r := bufio.NewReader(conn)
 	for {
 		_, err := r.ReadString('\x00')
-		if err == io.EOF {
+		if err != nil {
+			log.Println(err)
 			return
-		} else if err != nil {
-			log.Fatalln(err)
 		}
 
 		w := bufio.NewWriter(conn)
