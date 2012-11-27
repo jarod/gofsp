@@ -59,7 +59,9 @@ func (fs *FspServer) read(conn *net.TCPConn) {
 	for {
 		_, err := r.ReadString('\x00')
 		if err != nil {
-			log.Println(err)
+			if err != io.EOF {
+				log.Println(err)
+			}
 			return
 		}
 
