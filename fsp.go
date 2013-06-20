@@ -13,13 +13,13 @@ const (
 )
 
 type FspServer struct {
-	listener      *net.TCPListener
-	policyContent string
+	listener   *net.TCPListener
+	policyData []byte
 }
 
 func NewFspServer() *FspServer {
 	fsp := &FspServer{}
-	fsp.policyContent = DefaultPolicy
+	fsp.policyData = []byte(DefaultPolicy)
 	return fsp
 }
 
@@ -49,7 +49,7 @@ func (fs *FspServer) LoadPolicy(src io.Reader) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fs.policyContent = string(data) + "\x00"
+	fs.policyData = append(data, []byte("\x00")...)
 }
 
 func (fs *FspServer) read(conn *net.TCPConn) {
@@ -65,8 +65,8 @@ func (fs *FspServer) read(conn *net.TCPConn) {
 			return
 		}
 
-		w := bufio.NewWriter(conn)
-		w.WriteString(fs.policyContent)
+		w := bufio.NewWriterSize(conn, len(fs.policyData))
+		w.Write(fs.policyData)
 		w.Flush()
 		log.Printf("Sent policy file to %s", conn.RemoteAddr().String())
 	}
