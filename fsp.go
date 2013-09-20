@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"strings"
+	"time"
 )
 
 const (
@@ -55,17 +57,44 @@ func (fs *FspServer) LoadPolicy(src io.Reader) {
 func (fs *FspServer) handleConnection(conn *net.TCPConn) {
 	defer conn.Close()
 
-	r := bufio.NewReader(conn)
-	_, err := r.ReadString('\x00')
-	if err != nil {
-		if err != io.EOF {
-			log.Println(err)
+	select {
+	case ok := <-fs.read(conn):
+		if !ok {
+			return
 		}
+	case <-fs.timeout(time.Second * 2):
+		log.Println("Timeout reading from", conn.RemoteAddr().String())
 		return
 	}
 
 	w := bufio.NewWriterSize(conn, len(fs.policyData))
 	w.Write(fs.policyData)
 	w.Flush()
-	log.Printf("Sent policy file to %s", conn.RemoteAddr().String())
+	log.Println("Sent policy file to", conn.RemoteAddr().String())
+}
+
+func (fs *FspServer) read(conn *net.TCPConn) (c chan bool) {
+	c = make(chan bool)
+	go func() {
+		r := bufio.NewReader(conn)
+		_, err := r.ReadString('\x00')
+		if err != nil {
+			if err != io.EOF && !strings.HasSuffix(err.Error(), "use of closed network connection") {
+				log.Println(err)
+			}
+			c <- false
+		} else {
+			c <- true
+		}
+	}()
+	return
+}
+
+func (fs *FspServer) timeout(d time.Duration) (c chan bool) {
+	c = make(chan bool)
+	go func() {
+		time.Sleep(d)
+		c <- true
+	}()
+	return
 }
