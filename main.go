@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-const (
-	Version = "0.3"
+var (
+	VERSION string
 )
 
 var version = flag.Bool("version", false, "show gofsp version")
@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("gofsp - %s\n", Version)
+		fmt.Printf("gofsp - %s\n", VERSION)
 		os.Exit(0)
 	}
 

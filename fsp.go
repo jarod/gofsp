@@ -39,7 +39,7 @@ func (fs *FspServer) Startup() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		go fs.read(conn)
+		go fs.handleConnection(conn)
 	}
 	fs.listener.Close()
 }
@@ -52,22 +52,20 @@ func (fs *FspServer) LoadPolicy(src io.Reader) {
 	fs.policyData = append(data, []byte("\x00")...)
 }
 
-func (fs *FspServer) read(conn *net.TCPConn) {
+func (fs *FspServer) handleConnection(conn *net.TCPConn) {
 	defer conn.Close()
 
 	r := bufio.NewReader(conn)
-	for {
-		_, err := r.ReadString('\x00')
-		if err != nil {
-			if err != io.EOF {
-				log.Println(err)
-			}
-			return
+	_, err := r.ReadString('\x00')
+	if err != nil {
+		if err != io.EOF {
+			log.Println(err)
 		}
-
-		w := bufio.NewWriterSize(conn, len(fs.policyData))
-		w.Write(fs.policyData)
-		w.Flush()
-		log.Printf("Sent policy file to %s", conn.RemoteAddr().String())
+		return
 	}
+
+	w := bufio.NewWriterSize(conn, len(fs.policyData))
+	w.Write(fs.policyData)
+	w.Flush()
+	log.Printf("Sent policy file to %s", conn.RemoteAddr().String())
 }
