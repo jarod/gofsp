@@ -62,14 +62,11 @@ func (fs *FspServer) handleConnection(conn *net.TCPConn) {
 		if !ok {
 			return
 		}
-	case <-fs.timeout(time.Second * 2):
+	case <-time.After(time.Second * 2):
 		log.Println("Timeout reading from", conn.RemoteAddr().String())
 		return
 	}
-
-	w := bufio.NewWriterSize(conn, len(fs.policyData))
-	w.Write(fs.policyData)
-	w.Flush()
+	conn.Write(fs.policyData)
 	log.Println("Sent policy file to", conn.RemoteAddr().String())
 }
 
@@ -86,15 +83,6 @@ func (fs *FspServer) read(conn *net.TCPConn) (c chan bool) {
 		} else {
 			c <- true
 		}
-	}()
-	return
-}
-
-func (fs *FspServer) timeout(d time.Duration) (c chan bool) {
-	c = make(chan bool)
-	go func() {
-		time.Sleep(d)
-		c <- true
 	}()
 	return
 }
