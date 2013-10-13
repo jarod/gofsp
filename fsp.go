@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"strings"
 	"time"
 )
 
@@ -57,32 +56,15 @@ func (fs *FspServer) LoadPolicy(src io.Reader) {
 func (fs *FspServer) handleConnection(conn *net.TCPConn) {
 	defer conn.Close()
 
-	select {
-	case ok := <-fs.read(conn):
-		if !ok {
-			return
+	conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+	r := bufio.NewReader(conn)
+	_, err := r.ReadString('\x00')
+	if err != nil {
+		if err != io.EOF {
+			log.Println(err)
 		}
-	case <-time.After(time.Second * 2):
-		log.Println("Timeout reading from", conn.RemoteAddr().String())
 		return
 	}
 	conn.Write(fs.policyData)
 	log.Println("Sent policy file to", conn.RemoteAddr().String())
-}
-
-func (fs *FspServer) read(conn *net.TCPConn) (c chan bool) {
-	c = make(chan bool)
-	go func() {
-		r := bufio.NewReader(conn)
-		_, err := r.ReadString('\x00')
-		if err != nil {
-			if err != io.EOF && !strings.HasSuffix(err.Error(), "use of closed network connection") {
-				log.Println(err)
-			}
-			c <- false
-		} else {
-			c <- true
-		}
-	}()
-	return
 }
