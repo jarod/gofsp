@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	VERSION string
+	VERSION = "0.7"
 )
 
 var version = flag.Bool("version", false, "show gofsp version")
