@@ -30,6 +30,7 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		defer file.Close()
 		fsp.LoadPolicy(file)
 	}
 
