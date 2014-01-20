@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/jarod/gofsp/fsp"
 	"log"
 	"os"
 )
 
 var (
-	VERSION = "0.7"
+	VERSION = "0.8"
 )
 
 var version = flag.Bool("version", false, "show gofsp version")
@@ -22,7 +23,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	fsp := NewFspServer()
+	s := fsp.NewServer()
 
 	// load policy from file
 	if len(*filename) > 0 {
@@ -31,8 +32,8 @@ func main() {
 			log.Fatalln(err)
 		}
 		defer file.Close()
-		fsp.LoadPolicy(file)
+		s.LoadPolicy(file)
 	}
 
-	fsp.Startup()
+	s.ListenAndServe()
 }
