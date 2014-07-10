@@ -15,3 +15,7 @@ or get the [pre-built binaries](https://code.google.com/p/jarod/downloads/list?q
 ```
 sudo gofsp [-file="path to policy file"]
 ```
+
+## License
+
+This project is free to use and licensed under LGPL.
